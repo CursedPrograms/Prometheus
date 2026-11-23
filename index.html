@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prometheus - the Atelier 3D suite</title>
+  <meta name="description" content="Prometheus: a free 3D suite for modelling, sculpting, animation and rendering, with MB-Lab, CharMorph and SMPL-X character creators built in. Based on Blender 5.4. Part of Atelier.">
+  <link rel="stylesheet" href="site/style.css">
+</head>
+
+<body>
+  <header class="top">
+    <div>
+      <h1>Prometheus</h1>
+      <p class="tag">Shape people from clay: a full 3D suite with character creators built in. Part of
+        <a href="https://github.com/CursedPrograms/Atelier">Atelier</a>.</p>
+    </div>
+  </header>
+
+  <main>
+    <section class="shot">
+      <img src="site/window.jpg" alt="Prometheus: a CharMorph character in the 3D Viewport, the Humans tab open on the right">
+    </section>
+
+    <section class="actions">
+      <a class="btn" href="https://github.com/CursedPrograms/Prometheus#build">Build it</a>
+      <a class="btn quiet" href="https://github.com/CursedPrograms/Prometheus">Get it on GitHub</a>
+    </section>
+
+    <section class="grid" id="features"></section>
+
+    <section class="keys">
+      <h2>Your first person</h2>
+      <p>Press <kbd>N</kbd> in the 3D Viewport and open the <kbd>Humans</kbd> tab. In CharMorph, pick a base
+        (MB-Lab female or male, Antonia, Reom) and press <kbd>Import character</kbd>, then shape them with the
+        Morphing sliders. In MB-Lab, pick a character and press <kbd>Create</kbd>. SMPL-X bodies need the model files
+        from <a href="https://smpl-x.is.tue.mpg.de">smpl-x.is.tue.mpg.de</a> (free for non-commercial use); set their
+        folder once in Preferences.</p>
+    </section>
+    <section class="keys" id="requirements">
+      <h2>Minimum requirements</h2>
+      <table class="reqs">
+        <tr><th>System</th><td>Windows 10 or 11, 64-bit (Linux builds from source)</td></tr>
+        <tr><th>Processor</th><td>64-bit, 4 cores, with SSE4.2</td></tr>
+        <tr><th>Memory</th><td>8 GB RAM (16 GB for big scenes and 8K skin textures)</td></tr>
+        <tr><th>Graphics</th><td>a card with OpenGL 4.3 or Vulkan 1.2 and 2 GB of video memory</td></tr>
+        <tr><th>Disk</th><td>3 GB, plus your projects</td></tr>
+      </table>
+    </section>
+  </main>
+
+  <footer>
+    <p>Based on <a href="https://www.blender.org">Blender</a> 5.4 (GPL-3), by the Blender Foundation and Blender contributors.
+      Characters: MB-Lab (Manuel Bastioni), CharMorph (Michael Vigovsky), Antonia (Olaf Delgado-Friedrichs and others,
+      CC-BY), Reom (ComplexAce, Hope, CC-BY).</p>
+    <p>Farica&#9734;Kimora &copy; <a href="https://cursed-entertainment.itch.io/">Cursed Entertainment</a> <span id="year">2026</span></p>
+  </footer>
+  <script src="site/site.js"></script>
+</body>
+
+</html>
