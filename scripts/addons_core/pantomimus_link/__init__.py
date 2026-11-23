@@ -2,7 +2,8 @@
 #
 # Pantomimus (Atelier's webcam motion capture) streams the solved skeleton on 127.0.0.1:47811, one JSON line a frame:
 #   {"type":"skeleton","name":...,"bones":[{"name","parent","head":[x,y,z],"tail":[x,y,z]}...]}   when we connect
-#   {"type":"pose","time":t,"bones":[[qw,qx,qy,qz, hx,hy,hz]...],"contact":[l,r]}                  each frame
+#   {"type":"pose","time":t,"bones":[[qw,qx,qy,qz, hx,hy,hz]...],"contact":[l,r],"face":[52]}     each frame
+# ("face": ARKit's blendshapes, when the face is tracked; their names come as the skeleton's "faceNames")
 # Metres, Y up, the body facing +Z; each bone's turn from its rest in the world's axes, and its head's place.
 #
 # Install: Edit > Preferences > Add-ons > Install from Disk, pick this file. Then 3D Viewport > Sidebar (N) > Pantomimus.
@@ -201,6 +202,47 @@ def key_pose(obj, frame):
             pb.keyframe_insert("location", frame=frame, group=pb.name)
 
 
+# --- the face: ARKit's blendshapes onto shape keys ----------------------------------
+
+def face_meshes(st):
+    """The meshes the face drives: the one picked, else every mesh under the armature that has shape keys."""
+    if st.face_mesh is not None:
+        return [st.face_mesh]
+    out = []
+    if st.target is not None:
+        stack = list(st.target.children)
+        while stack:
+            o = stack.pop()
+            stack.extend(o.children)
+            if o.type == 'MESH' and o.data.shape_keys:
+                out.append(o)
+    return out
+
+
+def apply_face(meshes, names, weights, strength):
+    """Each weight onto the shape key of its name (capitals don't matter); how many keys took one."""
+    by = {n.lower(): w for n, w in zip(names, weights)}
+    n = 0
+    for m in meshes:
+        if not m.data.shape_keys:
+            continue
+        for k in m.data.shape_keys.key_blocks:
+            w = by.get(k.name.lower())
+            if w is not None:
+                k.value = max(0.0, min(1.0, w * strength))
+                n += 1
+    return n
+
+
+def key_face(meshes, names, frame):
+    wanted = {n.lower() for n in names}
+    for m in meshes:
+        if m.data.shape_keys:
+            for k in m.data.shape_keys.key_blocks:
+                if k.name.lower() in wanted:
+                    k.keyframe_insert("value", frame=frame)
+
+
 # --- the timer ---------------------------------------------------------------------
 
 def _tick():
@@ -214,9 +256,17 @@ def _tick():
     if got and _Stream.skeleton and _Stream.pose and st.target and st.target.type == 'ARMATURE':
         apply_pose(st.target, _Stream.skeleton, _Stream.pose, st.scale, st.root_motion)
         _Stream.status = f"Live: {_Stream.frames} frames"
+        face = _Stream.pose.get("face")
+        names = _Stream.skeleton.get("faceNames")
+        meshes = face_meshes(st) if (st.drive_face and face and names) else []
+        if meshes:
+            keys = apply_face(meshes, names, face, st.face_strength)
+            _Stream.status += f", face on {keys} shape keys"
         if st.recording:
             f = s.frame_current
             key_pose(st.target, f)
+            if meshes:
+                key_face(meshes, names, f)
             s.frame_set(f + 1)
         for area in bpy.context.screen.areas if bpy.context.screen else []:
             if area.type == 'VIEW_3D':
@@ -307,6 +357,11 @@ class PantomimusSettings(bpy.types.PropertyGroup):
     root_motion: BoolProperty(name="Root motion", default=True,
                               description="Move the root as you move; off keeps it in place")
     rate: IntProperty(name="Rate", default=60, min=1, max=120, subtype='NONE', description="Updates a second")
+    drive_face: BoolProperty(name="Drive the face", default=True,
+                             description="ARKit's blendshapes from Pantomimus onto shape keys of the same names")
+    face_mesh: PointerProperty(name="Face", type=bpy.types.Object, poll=lambda _s, o: o.type == 'MESH',
+                               description="The mesh whose shape keys the face drives; empty: every mesh under the armature")
+    face_strength: FloatProperty(name="Expression", default=1.0, min=0.0, max=2.0, description="Every blendshape times this")
     recording: BoolProperty(name="Record", default=False,
                             description="Key every pose that comes, one frame each, from the current frame")
 
@@ -339,6 +394,12 @@ class PANTOMIMUS_PT_panel(bpy.types.Panel):
         box.prop(st, "rate", slider=True)
         box.prop(st, "root_motion")
         box.operator("pantomimus.rest", icon='LOOP_BACK')
+
+        box = layout.box()
+        box.prop(st, "drive_face")
+        if st.drive_face:
+            box.prop(st, "face_mesh")
+            box.prop(st, "face_strength", slider=True)
 
         row = layout.row()
         row.enabled = _Stream.sock is not None and st.target is not None
