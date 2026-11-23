@@ -218,7 +218,7 @@ void BKE_appdir_folder_caches(MutableCStr path)
 
 #ifdef WIN32
   BLI_path_join(
-      path, caches_root_path->c_str(), "Blender Foundation", "Blender", "Cache", SEP_STR);
+      path, caches_root_path->c_str(), "Cursed Entertainment", "Prometheus", "Cache", SEP_STR);
 #elif defined(__APPLE__)
   BLI_path_join(path, caches_root_path->c_str(), "Blender", SEP_STR);
 #else /* __linux__ */
